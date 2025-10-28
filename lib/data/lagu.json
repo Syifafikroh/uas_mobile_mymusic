@@ -1,0 +1,86 @@
+[
+  {
+    "judul": "Solo",
+    "penyanyi": "Jennie",
+    "genre": "Pop",
+    "gambar": "assets/images/gambar1.jpg"
+  },
+  {
+    "judul": "Number one girl",
+    "penyanyi": "Rose",
+    "genre": "K-Pop",
+    "gambar": "assets/images/gambar2.jpg"
+  },
+  {
+    "judul": "Eyes Closed",
+    "penyanyi": "Jisoo Zayn Malik",
+    "genre": "Balad",
+    "gambar": "assets/images/gambar3.jpg"
+  },
+  {
+    "judul": "Happier",
+    "penyanyi": "Olivia Radrigo",
+    "genre": "Balad",
+    "gambar": "assets/images/gambar4.jpg"
+  },
+  {
+    "judul": "Lovely",
+    "penyanyi": "Billie Eilish",
+    "genre": "Balad",
+    "gambar": "assets/images/gambar5.jpg"
+  },
+  {
+    "judul": "Runtuh",
+    "penyanyi": "Feby Putri",
+    "genre": "Pop-Indie",
+    "gambar": "assets/images/gambar6.jpg"
+  },
+  {
+    "judul": "Gone",
+    "penyanyi": "Rose",
+    "genre": "Balad",
+    "gambar": "assets/images/gambar7.jpg"
+  },
+  {
+    "judul": "Love story",
+    "penyanyi": "Tailor Swift",
+    "genre": "Balad",
+    "gambar": "assets/images/gambar8.jpg"
+  },
+  {
+    "judul": "Ours to keep",
+    "penyanyi": "kendis",
+    "genre": "Balad",
+    "gambar": "assets/images/gambar9.jpg"
+  },
+  {
+    "judul": "Pretty",
+    "penyanyi": "H2H",
+    "genre": "Balad",
+    "gambar": "assets/images/gambar10.jpg"
+  },
+  {
+    "judul": "Mangu",
+    "penyanyi":"Fourtwnty",
+    "genre": "Balad",
+    "gambar": "assets/images/foto1.jpg"
+  },
+  {
+    "judul": "Alamak",
+    "penyanyi": "Rizky Febian",
+    "genre": "Balad",
+    "gambar": "assets/images/foto2.jpg"
+  },
+  {
+    "judul": "Kita Usahkan Lagi",
+    "penyanyi": "Batas Senja",
+    "genre": "Balad",
+    "gambar": "assets/images/foto3.jpg"
+  },
+  {
+    "judul": "Tanpa Cinta",
+    "penyanyi": "Tiara Andini",
+    "genre": "Balad",
+    "gambar": "assets/images/foto4.jpg"
+  }
+]
