@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:uts_mobile/pages/home_page.dart';
-import 'package:uts_mobile/pages/list_page.dart';
-import 'package:uts_mobile/pages/detail_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'pages/home_page.dart';
+import 'pages/detail_page.dart';
+import 'pages/list_page.dart';
+import 'pages/login_page.dart';
+import 'pages/favorite_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -14,30 +18,38 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'My Music App',
+      title: 'MyMusic App',
       theme: ThemeData(
-        fontFamily: 'Roboto',
-        scaffoldBackgroundColor: const Color(0xFF121212), // hitam elegan
-        primaryColor: Colors.pinkAccent,
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF121212),
-          foregroundColor: Colors.white,
-          elevation: 0,
-        ),
-        colorScheme: ColorScheme.fromSwatch().copyWith(
-          secondary: Colors.pinkAccent,
-        ),
-        textTheme: const TextTheme(
-          bodyMedium: TextStyle(color: Colors.white),
-          titleLarge: TextStyle(
-              fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
-        ),
+        primarySwatch: Colors.pink,
+        useMaterial3: false,
       ),
-      initialRoute: '/',
+
+      // ========================
+      // CEK SUDAH LOGIN APA BELUM
+      // ========================
+      home: FutureBuilder(
+        future: SharedPreferences.getInstance(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const SizedBox(); // loading ringan
+          }
+          if (!snapshot.hasData) {
+            return const LoginPage();
+          }
+
+          final prefs = snapshot.data as SharedPreferences;
+          final isLoggedIn = prefs.getBool("isLoggedIn") ?? false;
+
+          return isLoggedIn ? const HomePage() : const LoginPage();
+        },
+      ),
+
       routes: {
-        '/': (context) => const HomePage(),
-        '/list': (context) => const ListPage(),
-        '/detail': (context) => const DetailPage(),
+        "/home": (_) => const HomePage(),
+        "/detail": (_) => const DetailPage(),
+        "/list": (_) => const ListPage(),
+        "/login": (_) => const LoginPage(),
+        "/favorite": (_) => const FavoritePage(),
       },
     );
   }

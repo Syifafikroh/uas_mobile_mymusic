@@ -1,118 +1,198 @@
 import 'package:flutter/material.dart';
-import 'package:uts_mobile/models/item_model.dart';
+import 'package:just_audio/just_audio.dart';
+import 'package:uas_mobile/models/item_model.dart';
+import 'package:uas_mobile/services/favorite_service.dart';
 
-class DetailPage extends StatelessWidget {
+class DetailPage extends StatefulWidget {
   const DetailPage({super.key});
 
   @override
+  State<DetailPage> createState() => _DetailPageState();
+}
+
+class _DetailPageState extends State<DetailPage> {
+  final AudioPlayer _player = AudioPlayer();
+  final FavoriteService _favService = FavoriteService();
+
+  bool isFavorite = false;
+  bool isPlaying = false;
+
+  Duration currentPosition = Duration.zero;
+  final Duration totalDuration = const Duration(seconds: 30);
+
+  @override
+  void dispose() {
+    _player.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final item = ModalRoute.of(context)!.settings.arguments as ItemModel;
+    final ItemModel item =
+    ModalRoute.of(context)!.settings.arguments as ItemModel;
+
+    // Listen audio progress
+    _player.positionStream.listen((pos) {
+      setState(() => currentPosition = pos);
+    });
+
+    // Cek favorite ketika halaman muncul
+    Future.delayed(Duration.zero, () async {
+      bool fav = await _favService.isFavorite(item.trackId);
+      if (fav != isFavorite) {
+        setState(() => isFavorite = fav);
+      }
+    });
 
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.pinkAccent),
-          onPressed: () => Navigator.pop(context),
-        ),
+        iconTheme: const IconThemeData(color: Colors.pinkAccent),
         title: Text(
           item.judul,
           style: const TextStyle(
-            color: Colors.pinkAccent,
-            fontWeight: FontWeight.bold,
-          ),
+              color: Colors.pinkAccent, fontWeight: FontWeight.bold),
         ),
+        actions: [
+          IconButton(
+            icon: Icon(
+              isFavorite ? Icons.favorite : Icons.favorite_border,
+              color: Colors.pinkAccent,
+              size: 30,
+            ),
+            onPressed: () async {
+              if (isFavorite) {
+                await _favService.removeFavorite(item.trackId);
+                setState(() => isFavorite = false);
+              } else {
+                await _favService.addFavorite(item);
+                setState(() => isFavorite = true);
+              }
+            },
+          )
+        ],
         centerTitle: true,
       ),
+
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.symmetric(horizontal: 22),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
+            const SizedBox(height: 10),
+
+            // COVER
             ClipRRect(
               borderRadius: BorderRadius.circular(20),
-              child: Image.asset(
+              child: Image.network(
                 item.gambar,
-                width: double.infinity,
-                height: 300, // sedikit lebih tinggi biar proporsional
-                fit: BoxFit.contain, // biar foto nggak kepotong
+                width: 260,
+                height: 260,
+                fit: BoxFit.cover,
               ),
             ),
-            const SizedBox(height: 25),
+
+            const SizedBox(height: 20),
+
             Text(
               item.judul,
               style: const TextStyle(
-                fontSize: 22,
+                fontSize: 26,
                 fontWeight: FontWeight.bold,
-                color: Colors.black,
               ),
             ),
-            const SizedBox(height: 8),
+
             Text(
               item.penyanyi,
-              style: const TextStyle(
-                fontSize: 16,
-                color: Colors.grey,
+              style: TextStyle(fontSize: 18, color: Colors.grey.shade700),
+            ),
+
+            const SizedBox(height: 10),
+
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.pink.shade100,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                item.genre,
+                style: const TextStyle(
+                  color: Colors.pinkAccent,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
-            const SizedBox(height: 20),
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.pink.shade50,
-                borderRadius: BorderRadius.circular(15),
+
+            const SizedBox(height: 30),
+
+            // PROGRESS TEXT
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(_formatDuration(currentPosition),
+                    style: const TextStyle(color: Colors.grey)),
+                const Text("0:30", style: TextStyle(color: Colors.grey)),
+              ],
+            ),
+
+            // SLIDER
+            Slider(
+              activeColor: Colors.pinkAccent,
+              inactiveColor: Colors.pink.shade100,
+              min: 0,
+              max: totalDuration.inMilliseconds.toDouble(),
+              value: currentPosition.inMilliseconds
+                  .clamp(0, totalDuration.inMilliseconds)
+                  .toDouble(),
+              onChanged: (value) {
+                _player.seek(Duration(milliseconds: value.toInt()));
+              },
+            ),
+
+            const SizedBox(height: 15),
+
+            // PLAY BUTTON
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.pinkAccent,
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 40, vertical: 15),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30)),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  Text(
-                    "🎶 Song Information",
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.pinkAccent,
-                    ),
-                  ),
-                  SizedBox(height: 10),
-                  Text(
-                    "Genre musik ini menggambarkan suasana hati yang lembut, penuh makna, "
-                        "dan sarat emosi. Setiap nada dan liriknya menghadirkan nuansa ketenangan yang menembus perasaan pendengarnya, "
-                        "menciptakan suasana reflektif dan menenangkan. Musik dengan karakter seperti ini sering kali digunakan untuk mengekspresikan perasaan mendalam, "
-                        "seperti kerinduan, kasih sayang, dan ketenangan jiwa. Dengan irama yang lembut dan harmonis, "
-                        "genre ini mampu menyentuh hati, membawa pendengarnya ke dalam suasana yang hangat, damai, "
-                        "dan penuh ketulusan., "
-                        "menunjukkan karakter musik yang menenangkan dan menyentuh hati.",
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.black87,
-                      height: 1.5,
-                    ),
-                    textAlign: TextAlign.justify,
-                  ),
+              onPressed: () async {
+                if (!isPlaying) {
+                  await _player.setUrl(item.previewUrl);
+                  await _player.play();
+                } else {
+                  await _player.pause();
+                }
+                setState(() => isPlaying = !isPlaying);
+              },
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(isPlaying ? Icons.pause : Icons.play_arrow,
+                      size: 28, color: Colors.white),
+                  const SizedBox(width: 10),
+                  Text(isPlaying ? "Pause" : "Play Preview",
+                      style:
+                      const TextStyle(color: Colors.white, fontSize: 16)),
                 ],
               ),
             ),
-            const SizedBox(height: 30),
-            ElevatedButton.icon(
-              onPressed: () {},
-              icon: const Icon(Icons.play_arrow, color: Colors.white),
-              label: const Text(
-                "Putar Lagu",
-                style: TextStyle(color: Colors.white),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.pinkAccent,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(25)),
-                padding:
-                const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
-              ),
-            ),
+
+            const SizedBox(height: 40),
           ],
         ),
       ),
     );
+  }
+
+  String _formatDuration(Duration d) {
+    String twoDigits(int n) => n.toString().padLeft(2, '0');
+    return "${d.inMinutes}:${twoDigits(d.inSeconds % 60)}";
   }
 }

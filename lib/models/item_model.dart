@@ -1,33 +1,39 @@
 class ItemModel {
+  final int trackId;
   final String judul;
   final String penyanyi;
-  final String genre;
   final String gambar;
+  final String previewUrl;
+  final String genre;
 
   ItemModel({
+    required this.trackId,
     required this.judul,
     required this.penyanyi,
-    required this.genre,
     required this.gambar,
+    required this.previewUrl,
+    required this.genre,
   });
 
-  // Constructor untuk parsing dari JSON
   factory ItemModel.fromJson(Map<String, dynamic> json) {
     return ItemModel(
-      judul: json['judul'] ?? '',
-      penyanyi: json['penyanyi'] ?? '',
-      genre: json['genre'] ?? '',
-      gambar: json['gambar'] ?? '',
+      trackId: json["trackId"] ?? 0,
+      judul: json["trackName"] ?? "-",
+      penyanyi: json["artistName"] ?? "-",
+      gambar: json["artworkUrl100"] ?? "",
+      previewUrl: json["previewUrl"] ?? "",
+      genre: json["primaryGenreName"] ?? "",
     );
   }
 
-  // (opsional) Convert kembali ke Map, misal kalau kamu mau save ke JSON lagi
   Map<String, dynamic> toJson() {
     return {
-      'judul': judul,
-      'penyanyi': penyanyi,
-      'genre': genre,
-      'gambar': gambar,
+      "trackId": trackId,
+      "trackName": judul,
+      "artistName": penyanyi,
+      "artworkUrl100": gambar,
+      "previewUrl": previewUrl,
+      "primaryGenreName": genre,
     };
   }
 }

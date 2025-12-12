@@ -1,8 +1,6 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:uts_mobile/models/item_model.dart';
-import 'package:uts_mobile/widgets/custom_card.dart';
+import 'package:uas_mobile/models/item_model.dart';
+import 'package:uas_mobile/services/music_service.dart';
 
 class ListPage extends StatefulWidget {
   const ListPage({super.key});
@@ -12,34 +10,43 @@ class ListPage extends StatefulWidget {
 }
 
 class _ListPageState extends State<ListPage> {
-  late Future<List<ItemModel>> _laguList;
-  String searchQuery = '';
+  final MusicService _api = MusicService();
 
-  Future<List<ItemModel>> readJsonData() async {
-    final jsonData = await rootBundle.loadString('lib/data/lagu.json');
-    final list = json.decode(jsonData) as List<dynamic>;
-    return list.map((e) => ItemModel.fromJson(e)).toList();
-  }
+  late Future<List<ItemModel>> _laguList;
+  final TextEditingController _searchController = TextEditingController();
+
+  String query = "pop";
 
   @override
   void initState() {
     super.initState();
-    _laguList = readJsonData();
+    _laguList = _api.fetchSongs(query);
+  }
+
+  void _search(String value) {
+    query = value;
+    setState(() {
+      _laguList = _api.fetchSongs(query);
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.pinkAccent),
-          onPressed: () => Navigator.pop(context),
-        ),
+        iconTheme: const IconThemeData(color: Colors.pinkAccent),
         title: const Text(
-          'Daftar Lagu',
+          'All Songs',
           style: TextStyle(
             color: Colors.pinkAccent,
             fontWeight: FontWeight.bold,
@@ -47,111 +54,154 @@ class _ListPageState extends State<ListPage> {
         ),
         centerTitle: true,
       ),
-      body: FutureBuilder<List<ItemModel>>(
-        future: _laguList,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(color: Colors.pinkAccent),
-            );
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(
-              child: Text('Tidak ada data lagu.',
-                  style: TextStyle(color: Colors.grey)),
-            );
-          } else {
-            final lagu = snapshot.data!
-                .where((e) =>
-            e.judul.toLowerCase().contains(searchQuery.toLowerCase()) ||
-                e.penyanyi
-                    .toLowerCase()
-                    .contains(searchQuery.toLowerCase()))
-                .toList();
 
-            return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Column(
-                children: [
-                  // === Search Bar ===
-                  Container(
-                    margin: const EdgeInsets.symmetric(vertical: 10),
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    decoration: BoxDecoration(
-                      color: Colors.pink.shade50,
-                      borderRadius: BorderRadius.circular(25),
-                    ),
-                    child: TextField(
-                      decoration: const InputDecoration(
-                        icon: Icon(Icons.search, color: Colors.pinkAccent),
-                        hintText: "Cari lagu atau penyanyi...",
-                        hintStyle: TextStyle(color: Colors.grey),
-                        border: InputBorder.none,
-                      ),
-                      onChanged: (value) {
-                        setState(() => searchQuery = value);
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 10),
+      body: Column(
+        children: [
+          // 🔍 SEARCH BAR AESTHETIC
+          Container(
+            margin: const EdgeInsets.all(18),
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.pink.shade50,
+              borderRadius: BorderRadius.circular(25),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.pink.shade100,
+                  blurRadius: 6,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: TextField(
+              controller: _searchController,
+              onChanged: _search,
+              decoration: const InputDecoration(
+                border: InputBorder.none,
+                icon: Icon(Icons.search, color: Colors.pinkAccent),
+                hintText: "Search song or artist...",
+                hintStyle: TextStyle(color: Colors.grey),
+              ),
+            ),
+          ),
 
-                  // === List Lagu ===
-                  Expanded(
-                    child: ListView.builder(
-                      itemCount: lagu.length,
-                      itemBuilder: (context, index) {
-                        final item = lagu[index];
-                        return GestureDetector(
-                          onTap: () {
-                            Navigator.pushNamed(context, '/detail',
-                                arguments: item);
-                          },
-                          child: Card(
-                            color: Colors.pink.shade50,
-                            elevation: 2,
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(15)),
-                            margin: const EdgeInsets.symmetric(
-                                vertical: 8, horizontal: 4),
-                            child: ListTile(
-                              leading: ClipRRect(
-                                borderRadius: BorderRadius.circular(10),
-                                child: Image.asset(
-                                  item.gambar,
-                                  width: 55,
-                                  height: 55,
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                              title: Text(
-                                item.judul,
-                                style: const TextStyle(
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              subtitle: Text(
-                                item.penyanyi,
-                                style: const TextStyle(color: Colors.grey),
-                              ),
-                              trailing: Image.asset(
-                                'assets/icons/info.png',
-                                width: 25,
-                                height: 25,
-                                color: Colors.pinkAccent,
-                              ),
-                            ),
-                          ),
+          // LIST VIEW
+          Expanded(
+            child: FutureBuilder<List<ItemModel>>(
+              future: _laguList,
+              builder: (context, snapshot) {
+                // LOADING
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(
+                    child: CircularProgressIndicator(color: Colors.pinkAccent),
+                  );
+                }
+
+                // ERROR
+                if (snapshot.hasError) {
+                  return Center(
+                    child: Text(
+                      "Error: ${snapshot.error}",
+                      style: const TextStyle(color: Colors.red),
+                    ),
+                  );
+                }
+
+                // EMPTY
+                if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return const Center(
+                    child: Text("No songs found"),
+                  );
+                }
+
+                final songs = snapshot.data!;
+
+                // SUCCESS UI
+                return ListView.separated(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: songs.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 12),
+                  itemBuilder: (context, index) {
+                    final item = songs[index];
+
+                    return InkWell(
+                      borderRadius: BorderRadius.circular(18),
+                      onTap: () {
+                        Navigator.pushNamed(
+                          context,
+                          "/detail",
+                          arguments: item,
                         );
                       },
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }
-        },
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.pink.shade50,
+                          borderRadius: BorderRadius.circular(18),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.pink.shade100.withOpacity(0.4),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            // Song Thumbnail
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(14),
+                              child: Image.network(
+                                item.gambar,
+                                width: 65,
+                                height: 65,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+
+                            const SizedBox(width: 14),
+
+                            // Title + Artist
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    item.judul,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    item.penyanyi,
+                                    style: TextStyle(
+                                      color: Colors.grey.shade700,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                            // Arrow Icon
+                            const Icon(
+                              Icons.chevron_right,
+                              color: Colors.pinkAccent,
+                            )
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
