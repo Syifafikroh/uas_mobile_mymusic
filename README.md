@@ -40,7 +40,7 @@ Contoh:
 ## ⚙️ Cara Instalasi & Menjalankan Aplikasi
 
 #### 1. Clone Repository
-[git clone https://github.com/Syifafikroh/uas_mobile_mymusic.git](git clone https://github.com/Syifafikroh/uas_mobile_mymusic.git)
+git clone [https://github.com/Syifafikroh/uas_mobile_mymusic.git](https://github.com/Syifafikroh/uas_mobile_mymusic.git)
 #### 2. Masuk ke Folder Project
 #### 3. Install Dependency
 #### 4. Jalankan Aplikasi
